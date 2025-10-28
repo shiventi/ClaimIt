@@ -1,0 +1,26 @@
+# Core Flask
+flask==3.0.0
+flask-cors==4.0.0
+python-dotenv==1.0.0
+
+# IBM Watson
+ibm-watson==8.0.0
+ibm-cloud-sdk-core==3.19.0
+
+# Data processing
+pandas==2.1.0
+numpy==1.26.0
+
+# PDF generation
+reportlab==4.0.5
+
+# Web scraping (for rule updates)
+beautifulsoup4==4.12.0
+requests==2.31.0
+lxml==4.9.3
+
+# Date/time
+python-dateutil==2.8.2
+
+python -m pip install python-dotenv
+python -m pip install ibm-watson
