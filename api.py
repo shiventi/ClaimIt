@@ -1,11 +1,11 @@
-
+"""
 import requests
 
 def main():
 	url = "https://us-south.ml.cloud.ibm.com/ml/v1/text/chat?version=2023-05-29"
 	body = {
 		"messages": [{"role": "control", "content": "What is the capital of France?"}],
-		"project_id": "200b7d8e-ba79-458b-8af5-bb04203b8697",
+		"project_id": "WATSON_PROJECT_ID",
 		"model_id": "ibm/granite-3-8b-instruct",
 		"frequency_penalty": 0,
 		"max_tokens": 2000,
@@ -33,3 +33,4 @@ def main():
 
 if __name__ == "__main__":
 	main()
+"""
