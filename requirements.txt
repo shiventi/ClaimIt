@@ -22,5 +22,5 @@ lxml==4.9.3
 # Date/time
 python-dateutil==2.8.2
 
-python -m pip install python-dotenv
-python -m pip install ibm-watson
+python-dotenv
+ibm-watson

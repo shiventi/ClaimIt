@@ -1,134 +1,120 @@
+
 import os
 import json
-import re
-from typing import Dict, Any
-from ibm_watson import AssistantV2
-from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
+import requests
 from dotenv import load_dotenv
 
 load_dotenv()
 
 
+import time
+
 class WatsonAssistantSimple:
     def __init__(self):
-        print("Set up")
-        
-        # Getting credentials from .env file
-        api_key = os.getenv("WATSON_API_KEY")
-        url = os.getenv("WATSON_URL")
-        assistant_id = os.getenv("WATSON_ASSISTANT_ID", os.getenv("WATSON_ENVIRONMENT_ID"))
-        
-        if not api_key:
-            print("Error: Missing Watson Credentials in .env file")
-            raise ValueError("Watson credentials missing")
-        
-        url = "https://api.us-south.assistant.watson.cloud.ibm.com"
-        print(f"Using Watson Assistant URL: {url}")
-        
-        # Login to Watson
-        authenticator = IAMAuthenticator(api_key)
-        
-        # Create Watson assistant object
-        self.watson = AssistantV2(
-            version='2023-06-15',
-            authenticator=authenticator
-        )
-        
-        # Helps Watson find the correct service
-        self.watson.set_service_url(url)
-        
-        # Saves assistant ID 
-        self.assistant_id = assistant_id
-        
-        # Dictionary to store conversations
+        print("Setting up WatsonX REST API integration...")
+        self.url = os.getenv("WATSON_URL")
+        self.api_key = os.getenv("WATSON_API_KEY")
+        self.project_id = os.getenv("WATSON_ASSISTANT_ID")
+        self.model_id = "ibm/granite-3-8b-instruct"  # You can make this configurable
+        if not self.url or not self.api_key or not self.project_id:
+            raise ValueError("Missing WatsonX credentials in .env file")
+        self.access_token = None
+        self.token_expiry = 0
         self.conversations = {}
-        print("Watson Assistant is ready!")
-    
-    def start_conversation(self, conversation_id):        
-        print(f"Starting new conversation: {conversation_id}")
-        session_id = f"mock_session_{conversation_id}"
-        
-        # Save conversation in dictionary
-        self.conversations[conversation_id] = {
-            'session_id': session_id,
-            'collected_data': {},
-            'message_count': 0,
-            'history': []
+        print("WatsonX REST API is ready!")
+
+    def get_access_token(self):
+        # Only fetch if missing or expired
+        if self.access_token and time.time() < self.token_expiry - 60:
+            return self.access_token
+        print("Fetching new IBM Cloud IAM access token...")
+        url = "https://iam.cloud.ibm.com/identity/token"
+        headers = {"Content-Type": "application/x-www-form-urlencoded"}
+        data = {
+            "grant_type": "urn:ibm:params:oauth:grant-type:apikey",
+            "apikey": self.api_key
         }
-        
-        print(f"Session created: {session_id[:20]}...")
-        return session_id
+        try:
+            response = requests.post(url, headers=headers, data=data)
+            response.raise_for_status()
+            token_data = response.json()
+            self.access_token = token_data["access_token"]
+            expires_in = token_data.get("expires_in", 3600)
+            self.token_expiry = time.time() + expires_in
+            print("Token fetched, expires in", expires_in, "seconds.")
+            return self.access_token
+        except Exception as e:
+            print("Failed to fetch IAM token:", e)
+            raise
     
-    def send_message(self, conversation_id, user_message):        
-        # Gets or creates conversation
+    def start_conversation(self, conversation_id):
+        print(f"Starting new conversation: {conversation_id}")
+        self.conversations[conversation_id] = {
+            'history': [],
+            'collected_data': {},
+            'message_count': 0
+        }
+        return conversation_id
+    
+    def send_message(self, conversation_id, user_message):
         if conversation_id not in self.conversations:
             self.start_conversation(conversation_id)
-        
-        # Get the session
         conv = self.conversations[conversation_id]
-        session_id = conv['session_id']
-        
-        # Count the message
         conv['message_count'] += 1
-        conv['history'].append(user_message)
-        
+        conv['history'].append({"role": "user", "content": user_message})
         print(f"\nUser: {user_message}")
-        
-        # Try Watson API first
+
+        # Prepare payload for WatsonX REST API
+        body = {
+            "messages": conv['history'],
+            "project_id": self.project_id,
+            "model_id": self.model_id,
+            "frequency_penalty": 0,
+            "max_tokens": 2000,
+            "presence_penalty": 0,
+            "temperature": 0,
+            "top_p": 1
+        }
+        token = self.get_access_token()
+        headers = {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {token}"
+        }
         watson_text = None
-        
-        if not session_id.startswith("mock_"):
-            try:
-                # Call Watson API
-                response = self.watson.message(
-                    assistant_id=self.assistant_id,
-                    session_id=session_id,
-                    input={
-                        'message_type': 'text',
-                        'text': user_message
-                    }
-                ).get_result()
-                
-                # Extract Watson's response
-                watson_text = self._get_watson_text(response)
-                
-            except Exception as error:
-                print(f"Watson API error: {error}")
-        
-        # If Watson API failed, use local processing
-        if not watson_text:
+        try:
+            response = requests.post(self.url, headers=headers, json=body)
+            response.raise_for_status()
+            data = response.json()
+            # Extract response text
+            watson_text = self._get_watsonx_text(data)
+        except Exception as error:
+            print(f"WatsonX API error: {error}")
             watson_text = self._generate_local_response(user_message, conv['collected_data'])
-        
+
         print(f"Assistant: {watson_text}")
-        
-        # Extract data from user message 
         new_data = self._extract_data_from_message(user_message)
-        
-        # Update collected data
         conv['collected_data'].update(new_data)
-        
         print(f"Data collected: {conv['collected_data']}")
-        
-        # Check if complete
         is_complete = self.check_if_complete(conv['collected_data'])
-        
         if is_complete:
             print("All data collected!")
-        
         return {
             'watson_response': watson_text,
             'collected_data': conv['collected_data'].copy(),
             'is_complete': is_complete
         }
     
-    def _get_watson_text(self, watson_response):
+
+    def _get_watsonx_text(self, watsonx_response):
+        # Extracts the text from WatsonX REST API response
         try:
-            generic_responses = watson_response.get('output', {}).get('generic', [])
-            if generic_responses:
-                return generic_responses[0].get('text', "I understand.")
-        except:
-            pass
-        return None
+            choices = watsonx_response.get('choices', [])
+            if choices and 'message' in choices[0]:
+                return choices[0]['message'].get('content', "I understand.")
+        except Exception as e:
+            print(f"Failed to parse WatsonX response: {e}")
+        return "I understand."
     
     def _generate_local_response(self, user_message, collected_data):
         """Generate a response locally when Watson API is not available"""
@@ -259,20 +245,8 @@ class WatsonAssistantSimple:
         
         return True
     
-    def end_conversation(self, conversation_id):        
+    def end_conversation(self, conversation_id):
         if conversation_id in self.conversations:
-            session_id = self.conversations[conversation_id]['session_id']
-            
-            # Try to delete Watson session
-            if not session_id.startswith("mock_"):
-                try:
-                    self.watson.delete_session(
-                        assistant_id=self.assistant_id,
-                        session_id=session_id
-                    )
-                except:
-                    pass
-            
             del self.conversations[conversation_id]
             print(f"Ended conversation: {conversation_id}")
 
