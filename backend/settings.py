@@ -134,10 +134,14 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS settings
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
+if not os.getenv('RENDER'):
+    CORS_ALLOWED_ORIGINS = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
+elif 'CORS_ALLOWED_ORIGINS' not in globals():
+    # Production settings should define this, but fall back to empty list if not
+    CORS_ALLOWED_ORIGINS = []
 
 # REST Framework settings
 REST_FRAMEWORK = {
