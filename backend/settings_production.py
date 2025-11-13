@@ -6,11 +6,25 @@ from .settings import *
 
 DEBUG = False
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',')
+# Parse ALLOWED_HOSTS from environment variable, with fallback
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '').split(',') if os.getenv('ALLOWED_HOSTS') else []
 
-CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
+# Add Render domain if on Render
+if os.getenv('RENDER'):
+    ALLOWED_HOSTS.append('.onrender.com')
+    ALLOWED_HOSTS.append('claimit-cowf.onrender.com')
 
+# Filter out empty strings
+ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS if host.strip()]
+
+# Parse CORS origins from environment variable, with fallback
+CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',') if os.getenv('CORS_ALLOWED_ORIGINS') else []
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in CORS_ALLOWED_ORIGINS if origin.strip()]
+
+# Get SECRET_KEY from environment
 SECRET_KEY = os.getenv('SECRET_KEY')
+if not SECRET_KEY:
+    raise ValueError("SECRET_KEY must be set in production")
 
 SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SECURE = True
