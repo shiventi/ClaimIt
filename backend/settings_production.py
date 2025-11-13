@@ -19,7 +19,15 @@ ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS if host.strip()]
 
 # Parse CORS origins from environment variable, with fallback
 CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',') if os.getenv('CORS_ALLOWED_ORIGINS') else []
+
+# Add Vercel domain if on Render
+if os.getenv('RENDER'):
+    CORS_ALLOWED_ORIGINS.append('https://clmt.vercel.app')
+
 CORS_ALLOWED_ORIGINS = [origin.strip() for origin in CORS_ALLOWED_ORIGINS if origin.strip()]
+
+# Allow credentials for CORS
+CORS_ALLOW_CREDENTIALS = True
 
 # Get SECRET_KEY from environment
 SECRET_KEY = os.getenv('SECRET_KEY')
