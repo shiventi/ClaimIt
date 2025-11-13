@@ -438,6 +438,15 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.hashers import make_password, check_password
 
 
+@api_view(['GET'])
+def healthz(request):
+    """
+    Simple health check endpoint for uptime monitors (Render, UptimeRobot, etc.)
+    Returns 200 OK when the Django app is responsive.
+    """
+    return Response({'status': 'ok'})
+
+
 @api_view(['POST'])
 @csrf_exempt
 def employee_login(request):

@@ -4,6 +4,7 @@ import Chat from './components/Chat';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import './App.css';
+import { Analytics } from '@vercel/analytics/react';
 import { API_URL } from './config';
 
 function App() {
@@ -112,6 +113,7 @@ function App() {
           } 
         />
       </Routes>
+      <Analytics />
     </Router>
   );
 }

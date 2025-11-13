@@ -18,11 +18,13 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from chatbot.views import healthz
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/chatbot/', include('chatbot.urls')),
     path('api/forms/', include('forms.urls')),
+    path('healthz/', healthz),
 ]
 
 if settings.DEBUG:
