@@ -1,32 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from './ui/card';
 import { API_URL } from '../config';
 
 function CaseDetail({ caseId, onBack }) {
   const [caseData, setCase] = useState(null);
-  const [conversation, setConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
 
-  useEffect(() => {
-    fetchCaseDetail();
-  }, [caseId]);
-
-  const fetchCaseDetail = async () => {
+  const fetchCaseDetail = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch(`${API_URL}/chatbot/dashboard/cases/${caseId}/`);
       const data = await response.json();
       setCase(data.case);
-      setConversation(data.conversation);
       setMessages(data.messages || []);
     } catch (error) {
       console.error('Error fetching case detail:', error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [caseId]);
+
+  useEffect(() => {
+    fetchCaseDetail();
+  }, [fetchCaseDetail]);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';

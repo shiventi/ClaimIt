@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from './ui/card';
 import { API_URL } from '../config';
 
@@ -8,11 +8,7 @@ function ConversationDetail({ conversationId, onBack }) {
   const [caseSubmission, setCaseSubmission] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchConversationDetail();
-  }, [conversationId]);
-
-  const fetchConversationDetail = async () => {
+  const fetchConversationDetail = useCallback(async () => {
     setLoading(true);
     try {
       // Fetch messages
@@ -48,7 +44,11 @@ function ConversationDetail({ conversationId, onBack }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [conversationId]);
+
+  useEffect(() => {
+    fetchConversationDetail();
+  }, [fetchConversationDetail]);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';

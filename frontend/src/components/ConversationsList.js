@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from './ui/card';
 import ConversationDetail from './ConversationDetail';
 import { API_URL } from '../config';
@@ -10,11 +10,7 @@ function ConversationsList() {
   const [error, setError] = useState(null);
   const [selectedConversation, setSelectedConversation] = useState(null);
 
-  useEffect(() => {
-    fetchConversations();
-  }, [filter]);
-
-  const fetchConversations = async () => {
+  const fetchConversations = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -44,7 +40,11 @@ function ConversationsList() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    fetchConversations();
+  }, [fetchConversations]);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);

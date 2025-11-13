@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card } from './ui/card';
 import { API_URL } from '../config';
 
@@ -10,25 +10,7 @@ function CasesList({ onCaseSelect }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredCases, setFilteredCases] = useState([]);
 
-  useEffect(() => {
-    fetchCases();
-  }, [sortBy, order]);
-
-  useEffect(() => {
-    // Client-side filtering based on search term
-    if (searchTerm.trim()) {
-      const filtered = cases.filter(c => 
-        c.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.phone_number?.includes(searchTerm)
-      );
-      setFilteredCases(filtered);
-    } else {
-      setFilteredCases(cases);
-    }
-  }, [searchTerm, cases]);
-
-  const fetchCases = async () => {
+  const fetchCases = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch(
@@ -43,7 +25,25 @@ function CasesList({ onCaseSelect }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [sortBy, order]);
+
+  useEffect(() => {
+    fetchCases();
+  }, [fetchCases]);
+
+  useEffect(() => {
+    // Client-side filtering based on search term
+    if (searchTerm.trim()) {
+      const filtered = cases.filter(c => 
+        c.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        c.phone_number?.includes(searchTerm)
+      );
+      setFilteredCases(filtered);
+    } else {
+      setFilteredCases(cases);
+    }
+  }, [searchTerm, cases]);
 
   const getUrgencyColor = (score) => {
     if (score >= 8) return 'bg-red-50 text-red-900 border-red-200';

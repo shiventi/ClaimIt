@@ -9,7 +9,9 @@ export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localh
 // Full API URL
 export const API_URL = `${API_BASE_URL}/api`;
 
-export default {
+const config = {
   API_BASE_URL,
   API_URL,
 };
+
+export default config;
