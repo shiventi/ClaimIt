@@ -17,7 +17,7 @@ ibm-cloud-sdk-core==3.19.0
 
 # Data processing
 pandas>=2.2.0
-numpy==1.26.0
+numpy>=1.26.2
 
 # Web scraping (for rule updates)
 beautifulsoup4==4.12.0
