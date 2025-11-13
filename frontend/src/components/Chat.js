@@ -79,7 +79,15 @@ const Chat = ({ conversationId, onCreateConversation }) => {
         const data = await response.json();
         if (cancelled) return;
 
-        setMessages(data.messages || []);
+        const incomingMessages = data.messages || [];
+
+        setMessages((prevMessages) => {
+          // Avoid wiping the optimistic user message right after a new conversation is created.
+          if (prevMessages.length > 0 && incomingMessages.length === 0) {
+            return prevMessages;
+          }
+          return incomingMessages;
+        });
         setIsComplete(data.is_complete || false);
       } catch (error) {
         console.error('Error loading conversation:', error);
