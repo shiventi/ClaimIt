@@ -26,6 +26,7 @@ wheels/
 # Environment
 .env
 .env.local
+!.env.example
 
 # IDE
 .vscode/
@@ -50,7 +51,3 @@ Thumbs.db
 tmp/
 temp/
 *.tmp
-
-# PDFs (generated)
-*.pdf
-!sample.pdf

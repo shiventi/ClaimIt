@@ -1,0 +1,50 @@
+SNAP FORM (California SAWS 2) - FIELD MAPPING GUIDE
+====================================================
+
+✅ VERIFIED WORKING MAPPINGS (Based on actual PDF field inspection):
+
+PRIMARY APPLICANT INFORMATION (Page 1):
+- Text1 PG 1: First Name ✓
+- Text2 PG 1: Middle Initial ✓
+- Text3 PG 1: Last Name ✓
+- Text61 PG 1: Age ✓
+- Text4 PG 1: Street Address
+- Text5 PG 1: City
+- Text6 PG 1: State (usually "CA")
+- Text7 PG 1: ZIP Code
+- Text8 PG 1: Phone Number
+- Text9 PG 1: Date of Birth (MM/DD/YYYY)
+- Text62 PG 1: Social Security Number (optional)
+
+HOUSEHOLD & FINANCIAL INFORMATION (Page 1):
+- Text20 PG 1: Number of people in household ✓
+- Text30 PG 1: Total monthly income ✓
+- Text31 PG 1: Total savings/assets ✓
+
+EMPLOYMENT STATUS (Page 2):
+- Check Box16 PG 2: Currently Employed (checkbox)
+- Check Box17 PG 2: Self-Employed (checkbox)
+- Check Box18 PG 2: Unemployed (checkbox) ✓
+
+ADDITIONAL INFORMATION (Page 3):
+- Text40 PG 3: Monthly earnings from employment ✓
+
+HOUSEHOLD MEMBERS (Page 2):
+- Check Box20 PG 2: Has children (checkbox)
+
+DISABILITIES (Page 2):
+- Check Box25 PG 2: Has disability (checkbox)
+
+OTHER COMMON FIELDS (Page 2):
+- Text40 PG 2: Total monthly rent/mortgage
+- Text49 PG 2: Total monthly utilities
+- Text50 PG 2: Total monthly medical expenses
+- Text51 PG 2: Total monthly child support paid
+- Text52 PG 2: Total monthly dependent care costs
+
+NOTES:
+- The form has 1,444 fillable fields across 18 pages
+- Most critical data is on pages 1-3
+- Employment checkboxes are mutually exclusive
+- Test results: 9/9 fields successfully filled!
+- Field naming pattern: "Text[N] PG [page]" or "Check Box[N] PG [page]"

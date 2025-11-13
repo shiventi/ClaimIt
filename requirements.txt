@@ -1,4 +1,12 @@
-# Core Flask
+# Django
+django==5.2.7
+djangorestframework==3.16.1
+django-cors-headers==4.9.0
+
+# Database
+psycopg2-binary==2.9.9
+
+# Core Flask (keeping for compatibility)
 flask==3.0.0
 flask-cors==4.0.0
 python-dotenv==1.0.0
@@ -11,9 +19,6 @@ ibm-cloud-sdk-core==3.19.0
 pandas==2.1.0
 numpy==1.26.0
 
-# PDF generation
-reportlab==4.0.5
-
 # Web scraping (for rule updates)
 beautifulsoup4==4.12.0
 requests==2.31.0
@@ -22,5 +27,11 @@ lxml==4.9.3
 # Date/time
 python-dateutil==2.8.2
 
-python-dotenv
-ibm-watson
+# Supabase
+supabase==2.10.0
+
+# Password hashing
+bcrypt==4.2.1
+
+# Production server
+gunicorn==23.0.0

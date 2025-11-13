@@ -1,9 +1,7 @@
 # ClaimIt
-Conversational AI to help low-income users navigate government benefits by screening eligibility, auto-filling forms, and coordinating appointments - focused on California programs.
+Conversational AI to help low-income users navigate goverment benefits by screening eligibility and coordinating appointments - focused on California programs.
 
-## Group Project Team
-
-The project was developed by the following team members:
+## Team
 
 - Shiven Sheth
 - Arnav Nagre

@@ -1,0 +1,11 @@
+/* Minimal global styles - most styling is done with Tailwind */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+#root {
+  height: 100vh;
+  width: 100vw;
+}
