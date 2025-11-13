@@ -7,6 +7,8 @@ import claimItLogo from '../claimit.png';
 import claimItAvatar from '../claimitavatar.png';
 import { API_URL } from '../config';
 
+console.log('Chat component loaded. API_URL:', API_URL);
+
 const Chat = ({ conversationId, onCreateConversation }) => {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -116,6 +118,9 @@ const Chat = ({ conversationId, onCreateConversation }) => {
     setTimeout(() => setIsTyping(true), 300);
 
     try {
+      console.log('Sending message to:', `${API_URL}/chatbot/conversations/${currentConvId}/send_message/`);
+      console.log('Message content:', userMessage);
+      
       const response = await fetch(
         `${API_URL}/chatbot/conversations/${currentConvId}/send_message/`,
         {
@@ -125,11 +130,17 @@ const Chat = ({ conversationId, onCreateConversation }) => {
         }
       );
 
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
       if (!response.ok) {
-        throw new Error(`Request failed with status ${response.status}`);
+        const errorText = await response.text();
+        console.error('Response error text:', errorText);
+        throw new Error(`Request failed with status ${response.status}: ${errorText}`);
       }
 
       const data = await response.json();
+      console.log('Response data:', data);
       
       if (data.messages) {
         setMessages(data.messages);
