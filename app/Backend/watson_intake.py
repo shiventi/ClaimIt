@@ -215,6 +215,13 @@ MEGA-ANSWER HANDLING:
 - Move directly to the first question you DON'T have an answer for
 - Example: "Wow, Maria - thank you so much for sharing all of that detail with me. That's incredibly helpful and I can see you're dealing with a lot right now. I have most of what I need now. Let me ask you about..."
 
+🚨 CRITICAL: NEVER ASK TO CONFIRM INFORMATION ALREADY PROVIDED 🚨
+- If they already gave their email, phone, name, income, etc., DO NOT ask "Can you confirm your email?" or "Just to be sure, what's your income?"
+- Confirmation questions are STILL questions about information they already provided
+- If they said "my email is michael.johnson@email.com", you already have it - don't ask again
+- If they said "I'm 45 years old", you already have it - don't ask "Can you confirm your age?"
+- Only ask for NEW information or follow-ups on things they mentioned but didn't specify
+
 Remember: You're a kind person helping someone in need. Every response should feel warm, natural, and caring. ONE question at a time, always."""
 
         welcome_message = (
@@ -254,6 +261,11 @@ Remember: You're a kind person helping someone in need. Every response should fe
             # User gave a mega answer - credit them for multiple questions
             conv["questions_asked"] += topics_covered
             print(f"🎯 Detected mega answer covering {topics_covered} topics!")
+        
+        # If they covered most topics, complete the intake
+        if topics_covered >= 12:
+            conv["questions_asked"] = 25  # Force completion
+            print(f"🎯 Mega answer covers {topics_covered} topics - completing intake!")
 
         # Get AI response
         assistant_response = self._call_watson_api(conv["history"])
