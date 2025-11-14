@@ -257,24 +257,36 @@ Remember: You're a kind person helping someone in need. Every response should fe
 
         # Check if user provided a comprehensive "mega answer" covering multiple topics
         topics_covered = self._count_topics_in_response(user_message)
-        if topics_covered >= 5:
+        is_mega_answer = topics_covered >= 5
+        if is_mega_answer:
             # User gave a mega answer - credit them for multiple questions
             conv["questions_asked"] += topics_covered
             print(f"🎯 Detected mega answer covering {topics_covered} topics!")
         
         # If they covered most topics, complete the intake
-        if topics_covered >= 12:
+        is_comprehensive = topics_covered >= 12
+        if is_comprehensive:
             conv["questions_asked"] = 25  # Force completion
             print(f"🎯 Mega answer covers {topics_covered} topics - completing intake!")
 
         # Get AI response
-        assistant_response = self._call_watson_api(conv["history"])
-        conv["history"].append({"role": "assistant", "content": assistant_response})
+        if is_comprehensive:
+            # For comprehensive answers, generate completion acknowledgment
+            assistant_response = (
+                "Wow, Michael - thank you so much for sharing all of that detail with me. "
+                "That's incredibly helpful and I can see you're dealing with a lot right now. "
+                "I have everything I need to help you find the right benefits. "
+                "Let me get this submitted for you right away."
+            )
+            conv["history"].append({"role": "assistant", "content": assistant_response})
+        else:
+            assistant_response = self._call_watson_api(conv["history"])
+            conv["history"].append({"role": "assistant", "content": assistant_response})
         
-        # Use Watson to analyze if a new question was asked
-        is_question = self._analyze_if_question_asked(assistant_response)
-        if is_question:
-            conv["questions_asked"] += 1
+            # Use Watson to analyze if a new question was asked
+            is_question = self._analyze_if_question_asked(assistant_response)
+            if is_question:
+                conv["questions_asked"] += 1
 
         # Extract structured data from conversation
         extracted_data = self._extract_intake_data(conv["history"], conv["questions_asked"])
