@@ -101,12 +101,16 @@ const Chat = ({ conversationId, onCreateConversation }) => {
     };
   }, [conversationId]);
 
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!inputMessage.trim() || isLoading) return;
+  const handleSendMessage = async (e, retryAttempt = false, retryMessage = null) => {
+    e?.preventDefault();
+    if (isLoading) return;
+    
+    const userMessage = retryMessage || inputMessage.trim();
+    if (!userMessage) return;
 
-    const userMessage = inputMessage.trim();
-    setInputMessage('');
+    if (!retryAttempt) {
+      setInputMessage('');
+    }
     setIsLoading(true);
 
     // Create conversation if it doesn't exist yet
@@ -120,8 +124,11 @@ const Chat = ({ conversationId, onCreateConversation }) => {
       }
     }
 
-    const newUserMessage = { role: 'user', content: userMessage, timestamp: new Date().toISOString() };
-    setMessages(prev => [...prev, newUserMessage]);
+    // Only add user message to UI if this is not a retry
+    if (!retryAttempt) {
+      const newUserMessage = { role: 'user', content: userMessage, timestamp: new Date().toISOString() };
+      setMessages(prev => [...prev, newUserMessage]);
+    }
 
     setTimeout(() => setIsTyping(true), 300);
 
@@ -144,6 +151,27 @@ const Chat = ({ conversationId, onCreateConversation }) => {
       if (!response.ok) {
         const errorText = await response.text();
         console.error('Response error text:', errorText);
+        
+        // If conversation doesn't exist (404), create a new one and retry
+        if (response.status === 404 && errorText.includes('No Conversation matches') && !retryAttempt) {
+          console.log('Conversation not found, creating new one...');
+          localStorage.removeItem('currentConversationId');
+          setIsTyping(false);
+          setIsLoading(false);
+          
+          // Create new conversation and retry with the same message
+          if (onCreateConversation) {
+            const newConvId = await onCreateConversation();
+            if (newConvId) {
+              console.log('Retrying with new conversation:', newConvId);
+              // Retry with the same message but mark as retry to avoid duplicate UI message
+              return handleSendMessage(e, true, userMessage);
+            }
+          }
+          
+          throw new Error('Conversation was deleted or expired. Please refresh and start a new conversation.');
+        }
+        
         throw new Error(`Request failed with status ${response.status}: ${errorText}`);
       }
 
@@ -204,7 +232,11 @@ const Chat = ({ conversationId, onCreateConversation }) => {
           <div className="flex items-center gap-3">
             <div 
               className="h-10 flex items-center justify-center flex-shrink-0 cursor-pointer"
-              onClick={() => window.location.reload()}
+              onClick={() => {
+                // Clear conversation and reload to start fresh
+                localStorage.removeItem('currentConversationId');
+                window.location.reload();
+              }}
             >
               <img 
                 src={claimItLogo} 

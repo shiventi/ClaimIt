@@ -89,6 +89,17 @@ class ConversationViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        # CRITICAL: If conversation is already complete, don't process new messages
+        if conversation.is_complete:
+            return Response(
+                {
+                    'is_complete': True,
+                    'latest_message': 'Your intake is complete. A caseworker will contact you within 48 hours. Thank you!',
+                    'questions_asked': 25,  # Indicate completion
+                },
+                status=status.HTTP_200_OK
+            )
+        
         # Save user message
         user_msg = Message.objects.create(
             conversation=conversation,
@@ -96,9 +107,10 @@ class ConversationViewSet(viewsets.ModelViewSet):
             content=user_message
         )
         
-        # OPTIMIZATION: Only sync user messages (not every message to reduce API calls)
-        # Assistant messages will be synced when conversation is complete
-        sync_message_to_supabase(user_msg)
+        # CRITICAL: Always sync user message to Supabase immediately
+        user_sync_result = sync_message_to_supabase(user_msg)
+        if not user_sync_result:
+            print(f"⚠️ WARNING: User message {user_msg.id} NOT synced to Supabase!")
         
         # Get Watson response
         if self.watson:
@@ -146,8 +158,10 @@ class ConversationViewSet(viewsets.ModelViewSet):
             content=assistant_message
         )
         
-        # Sync assistant message too
-        sync_message_to_supabase(assistant_msg)
+        # CRITICAL: Always sync assistant message to Supabase immediately
+        assistant_sync_result = sync_message_to_supabase(assistant_msg)
+        if not assistant_sync_result:
+            print(f"⚠️ WARNING: Assistant message {assistant_msg.id} NOT synced to Supabase!")
         
         # Return response with progress info
         serializer = self.get_serializer(conversation)
@@ -240,11 +254,11 @@ class ConversationViewSet(viewsets.ModelViewSet):
             urgency_reasoning=safe_str(summary_data.get('urgency_reasoning', '')),
             
             # Personal info
-            full_name=full_name,
+            full_name=full_name[:255] if full_name else '',
             date_of_birth=dob,
             age=personal.get('age'),
-            phone_number=safe_str(personal.get('phone', '')),
-            email=safe_str(personal.get('email', '')),
+            phone_number=safe_str(personal.get('phone', ''))[:20],
+            email=safe_str(personal.get('email', ''))[:254],
             
             # Household
             household_size=household.get('size'),
@@ -259,13 +273,13 @@ class ConversationViewSet(viewsets.ModelViewSet):
             monthly_rent=financial.get('monthly_rent'),
             
             # Employment
-            employment_status=safe_str(employment.get('status', '')),
-            current_employer=safe_str(employment.get('employer', '')),
-            job_title=safe_str(employment.get('job_title', '')),
-            employment_duration=safe_str(employment.get('duration', '')),
+            employment_status=safe_str(employment.get('status', ''))[:50],
+            current_employer=safe_str(employment.get('employer', ''))[:255],
+            job_title=safe_str(employment.get('job_title', ''))[:255],
+            employment_duration=safe_str(employment.get('duration', ''))[:100],
             
             # Housing
-            housing_situation=safe_str(housing.get('status', '')),
+            housing_situation=safe_str(housing.get('status', ''))[:100],
             address=safe_str(housing.get('address', '')),
             at_risk_of_homelessness=bool(housing.get('at_risk_of_homelessness', False)),
             
@@ -277,8 +291,8 @@ class ConversationViewSet(viewsets.ModelViewSet):
             has_health_insurance=health.get('has_insurance'),
             
             # Legal
-            citizenship_status=safe_str(legal.get('citizenship_status', '')),
-            immigration_status=safe_str(legal.get('immigration_status', '')),
+            citizenship_status=safe_str(legal.get('citizenship_status', ''))[:100],
+            immigration_status=safe_str(legal.get('immigration_status', ''))[:100],
             
             # Current benefits
             current_benefits=safe_list(current_benefits.get('programs', [])),

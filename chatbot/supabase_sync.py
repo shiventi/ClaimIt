@@ -20,13 +20,18 @@ def get_supabase_client() -> Optional[Client]:
     """
     if not SUPABASE_KEY:
         print("⚠️ Supabase not available: Missing SUPABASE_ANON_KEY")
+        print(f"   SUPABASE_URL present: {bool(SUPABASE_URL)}")
         return None
         
     try:
         client = create_client(SUPABASE_URL, SUPABASE_KEY)
+        print(f"✅ Supabase client created successfully (URL: {SUPABASE_URL[:30]}...)")
         return client
     except Exception as e:
-        print(f"⚠️ Supabase not available: {e}")
+        import traceback
+        print(f"⚠️ Supabase client creation failed: {e}")
+        print(f"   SUPABASE_URL: {SUPABASE_URL}")
+        print(f"   Traceback: {traceback.format_exc()}")
         return None
 
 
@@ -37,6 +42,7 @@ def sync_conversation_to_supabase(conversation) -> bool:
     """
     supabase = get_supabase_client()
     if not supabase:
+        print(f"⚠️ Supabase client not available - cannot sync conversation {conversation.id}")
         return False
     
     try:
@@ -48,11 +54,13 @@ def sync_conversation_to_supabase(conversation) -> bool:
         }
         
         # Upsert (insert or update)
-        supabase.table("conversations").upsert(data).execute()
-        print(f"📤 Synced conversation {conversation.id} to Supabase")
+        result = supabase.table("conversations").upsert(data).execute()
+        print(f"📤 Synced conversation {conversation.id} to Supabase (status: {result.data is not None})")
         return True
     except Exception as e:
-        print(f"⚠️ Failed to sync conversation: {e}")
+        import traceback
+        print(f"⚠️ Failed to sync conversation {conversation.id}: {e}")
+        print(f"Traceback: {traceback.format_exc()}")
         return False
 
 
@@ -63,6 +71,7 @@ def sync_message_to_supabase(message) -> bool:
     """
     supabase = get_supabase_client()
     if not supabase:
+        print(f"⚠️ Supabase client not available - cannot sync message {message.id}")
         return False
     
     try:
@@ -74,11 +83,13 @@ def sync_message_to_supabase(message) -> bool:
             "created_at": message.created_at.isoformat(),
         }
         
-        supabase.table("messages").upsert(data).execute()
-        print(f"📤 Synced message {message.id} to Supabase")
+        result = supabase.table("messages").upsert(data).execute()
+        print(f"📤 Synced message {message.id} to Supabase (status: {result.data is not None})")
         return True
     except Exception as e:
-        print(f"⚠️ Failed to sync message: {e}")
+        import traceback
+        print(f"⚠️ Failed to sync message {message.id}: {e}")
+        print(f"Traceback: {traceback.format_exc()}")
         return False
 
 
@@ -193,5 +204,30 @@ def bulk_sync_conversation_with_messages(conversation) -> bool:
         print(f"✅ Fully synced conversation {conversation.id} with {len(messages)} messages")
         return True
     except Exception as e:
+        import traceback
         print(f"⚠️ Failed to bulk sync: {e}")
+        print(f"Traceback: {traceback.format_exc()}")
+        return False
+
+
+def test_supabase_connection() -> bool:
+    """
+    Test Supabase connection at startup
+    Returns True if connection is working, False otherwise
+    """
+    print("🔌 Testing Supabase connection...")
+    supabase = get_supabase_client()
+    if not supabase:
+        print("❌ Supabase connection test FAILED: Could not create client")
+        return False
+    
+    try:
+        # Try a simple query
+        result = supabase.table("conversations").select("id").limit(1).execute()
+        print(f"✅ Supabase connection test PASSED (found {len(result.data)} conversations)")
+        return True
+    except Exception as e:
+        import traceback
+        print(f"❌ Supabase connection test FAILED: {e}")
+        print(f"Traceback: {traceback.format_exc()}")
         return False
